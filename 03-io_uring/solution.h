@@ -13,5 +13,7 @@
 
    If a copy was successful, return 0. If an error occurred during a read
    or a write, return -errno.
+
+   Assume a recent kernel and use IORING_OP_READ and IORING_OP_WRITE.
 */
 int copy(int in, int out);
