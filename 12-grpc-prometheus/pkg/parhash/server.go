@@ -41,7 +41,7 @@ type Config struct {
 //
 // The server must report the following performance counters to Prometheus:
 //
-//  1. nr_nr_requests: a counter that is incremented every time a call
+//  1. nr_requests: a counter that is incremented every time a call
 //     is made to ParallelHash(),
 //
 //  2. subquery_durations: a histogram that tracks durations of calls
