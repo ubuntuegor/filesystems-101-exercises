@@ -14,7 +14,8 @@ static struct {
 } state;
 
 static void reset_path() {
-	state.path[0] = '\0';
+	state.path[0] = '/';
+	state.path[1] = '\0';
 }
 
 static void append_dir() {
@@ -38,18 +39,17 @@ static void append_child(const char* child) {
 
 static void go_back() {
 	char* last_dir = strrchr(state.path, '/');
-	if (last_dir != NULL) {
+	if (last_dir != state.path) {
 		*(last_dir) = '\0';
+	}
+	last_dir = strrchr(state.path, '/');
+	if (last_dir != state.path) {
+		*(last_dir + 1) = '\0';
 	}
 }
 
 static char is_directory(const char *path) {
     struct stat path_stat;
-
-	char* last_dir = strrchr(path, '/');
-	if (last_dir == NULL) {
-		return 1;
-	}
 
     if (stat(path, &path_stat) == -1) {
         return 0;
@@ -61,7 +61,7 @@ static char is_directory(const char *path) {
 static char is_link(const char* child) {
 	struct stat path_stat;
 
-	char* path = fs_xasprintf("%s/%s", state.path, child);
+	char* path = fs_xasprintf("%s%s", state.path, child);
 
     if (lstat(path, &path_stat) < 0) {
 		fs_xfree(path);
@@ -76,7 +76,7 @@ static char is_link(const char* child) {
 static char* read_link(const char* child) {
 	static char buf[PATH_MAX];
 
-	char* path = fs_xasprintf("%s/%s", state.path, child);
+	char* path = fs_xasprintf("%s%s", state.path, child);
 
 	ssize_t size = readlink(path, buf, PATH_MAX);
     if (size < 0) {
@@ -145,8 +145,10 @@ static char walkpath(const char* path) {
 				return -1;
 			}
 
-			append_dir();
 			append_child(child);
+			if (is_directory(state.path)) {
+				append_dir();
+			}
 		}
 
 		fs_xfree(child);
@@ -164,10 +166,6 @@ void abspath(const char *path)
 	if (walkpath(path) < 0) {
 		fs_xfree(state.path);
 		return;
-	}
-
-	if (is_directory(state.path)) {
-		append_dir();
 	}
 
 	report_path(state.path);
