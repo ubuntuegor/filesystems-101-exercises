@@ -45,6 +45,10 @@ static char is_directory(const char *path) {
     struct stat path_stat;
 
 	char* last_dir = strrchr(path, '/');
+	if (last_dir == NULL) {
+		return 1;
+	}
+
 	size_t parent_size = last_dir - path;
 	char* parent = fs_xmalloc(parent_size + 1);
 	parent[0] = '\0';
@@ -165,7 +169,7 @@ void abspath(const char *path)
 		return;
 	}
 
-	char is_directory_result = is_directory(path);
+	char is_directory_result = is_directory(state.path);
 	if (is_directory_result < 0) {
 		fs_xfree(state.path);
 		return;
