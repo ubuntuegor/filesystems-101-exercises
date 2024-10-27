@@ -38,7 +38,9 @@ static void append_child(const char* child) {
 
 static void go_back() {
 	char* last_dir = strrchr(state.path, '/');
-	*(last_dir) = '\0';
+	if (last_dir != NULL) {
+		*(last_dir) = '\0';
+	}
 }
 
 static char is_directory(const char *path) {
