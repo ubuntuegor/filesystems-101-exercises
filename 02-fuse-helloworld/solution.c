@@ -56,7 +56,7 @@ static int hello_open(const char *path, struct fuse_file_info *fi)
 		return -ENOENT;
 
 	if ((fi->flags & O_ACCMODE) != O_RDONLY)
-		return -EACCES;
+		return -EROFS;
 
 	return 0;
 }
@@ -86,11 +86,37 @@ static int hello_read(const char *path, char *buf, size_t size, off_t offset,
 	return size;
 }
 
+static int hello_mknod(const char *, mode_t, dev_t) {
+	return -EROFS;
+}
+
+static int hello_mkdir(const char *, mode_t) {
+	return -EROFS;
+}
+
+static int hello_link(const char *, const char *) {
+	return -EROFS;
+}
+
+static int hello_symlink(const char *, const char *) {
+	return -EROFS;
+}
+
+static int hello_rename(const char *, const char *, unsigned int flags) {
+	(void) flags;
+	return -EROFS;
+}
+
 static const struct fuse_operations hellofs_ops = {
 	.getattr = hello_getattr,
 	.readdir = hello_readdir,
 	.open = hello_open,
 	.read = hello_read,
+	.mknod = hello_mknod,
+	.mkdir = hello_mkdir,
+	.link = hello_link,
+	.symlink = hello_symlink,
+	.rename = hello_rename,
 };
 
 int helloworld(const char *mntp)
