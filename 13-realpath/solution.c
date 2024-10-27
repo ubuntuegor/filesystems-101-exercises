@@ -41,9 +41,7 @@ static void go_back() {
 	char* last_dir = strrchr(state.path, '/');
 	if (last_dir != state.path) {
 		*(last_dir) = '\0';
-	}
-	last_dir = strrchr(state.path, '/');
-	if (last_dir != state.path) {
+		last_dir = strrchr(state.path, '/');
 		*(last_dir + 1) = '\0';
 	}
 }
