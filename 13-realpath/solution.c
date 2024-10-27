@@ -144,14 +144,19 @@ static char walkpath(const char* path) {
 				return -1;
 			}
 
+			char* old_path = fs_xstrdup(state.path);
+
 			append_child(child);
 			if (is_directory(state.path)) {
 				append_dir();
 			} else if (is_link_result >= 0 && has_trailing_slashes) {
-				report_error(state.path, child, ENOTDIR);
+				report_error(old_path, child, ENOTDIR);
+				fs_xfree(old_path);
 				fs_xfree(child);
 				return -1;
 			}
+
+			fs_xfree(old_path);
 		}
 
 		fs_xfree(child);
