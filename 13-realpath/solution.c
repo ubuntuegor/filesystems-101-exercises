@@ -23,7 +23,7 @@ static void append_dir() {
 		state.capacity *= 2;
 		state.path = fs_xrealloc(state.path, state.capacity);
 	}
-	strcpy(state.path + path_len, "/");
+	strcat(state.path, "/");
 }
 
 static void append_child(const char* child) {
@@ -33,7 +33,7 @@ static void append_child(const char* child) {
 		state.capacity *= 2;
 		state.path = fs_xrealloc(state.path, state.capacity);
 	}
-	strcpy(state.path + path_len, child);
+	strcat(state.path, child);
 }
 
 static void go_back() {
