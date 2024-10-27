@@ -18,15 +18,6 @@ static void reset_path() {
 	state.path[1] = '\0';
 }
 
-static void append_dir() {
-	size_t path_len = strlen(state.path);
-	while (path_len + 2 > state.capacity) {
-		state.capacity *= 2;
-		state.path = fs_xrealloc(state.path, state.capacity);
-	}
-	strncat(state.path, "/", state.capacity - path_len);
-}
-
 static void append_child(const char* child) {
 	size_t path_len = strlen(state.path);
 	size_t child_len = strlen(child);
@@ -35,6 +26,10 @@ static void append_child(const char* child) {
 		state.path = fs_xrealloc(state.path, state.capacity);
 	}
 	strncat(state.path, child, state.capacity - path_len);
+}
+
+static void append_dir() {
+	append_child("/");
 }
 
 static void go_back() {
@@ -145,11 +140,13 @@ static char walkpath(const char* path) {
 			}
 
 			char* old_path = fs_xstrdup(state.path);
+			char child_exists = is_link_result == 0;
 
 			append_child(child);
+
 			if (is_directory(state.path)) {
 				append_dir();
-			} else if (is_link_result >= 0 && has_trailing_slashes) {
+			} else if (child_exists && has_trailing_slashes) {
 				report_error(old_path, child, ENOTDIR);
 				fs_xfree(old_path);
 				fs_xfree(child);
@@ -171,12 +168,10 @@ void abspath(const char *path)
 	state.capacity = 4;
 	state.path = fs_xmalloc(state.capacity);
 	reset_path();
-	if (walkpath(path) < 0) {
-		fs_xfree(state.path);
-		return;
-	}
 
-	report_path(state.path);
+	if (walkpath(path) >= 0) {
+		report_path(state.path);
+	}
 
 	fs_xfree(state.path);
 }
