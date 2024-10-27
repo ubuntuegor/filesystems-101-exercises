@@ -47,8 +47,8 @@ static char is_directory(const char *path) {
 	char* last_dir = strrchr(path, '/');
 	size_t parent_size = last_dir - path;
 	char* parent = fs_xmalloc(parent_size + 1);
-	strncpy(parent, path, parent_size);
-	parent[parent_size] = '\0';
+	parent[0] = '\0';
+	strncat(parent, path, parent_size);
 
     if (stat(path, &path_stat) == -1) {
         report_error(parent, last_dir + 1, errno);
@@ -109,8 +109,8 @@ static char walkpath(const char* path) {
 		const char* next_path = strchrnul(path, '/');
 		size_t name_len = next_path - path;
 		char* child = fs_xmalloc(name_len + 1);
-		strncpy(child, path, name_len);
-		child[name_len] = '\0';
+		child[0] = '\0';
+		strncat(child, path, name_len);
 
 		if (name_len == 0 || strncmp(path, ".", name_len) == 0) {
 			path = next_path + 1;
