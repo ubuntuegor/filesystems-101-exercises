@@ -51,18 +51,10 @@ static char is_directory(const char *path) {
 		return 1;
 	}
 
-	size_t parent_size = last_dir - path;
-	char* parent = fs_xmalloc(parent_size + 1);
-	parent[0] = '\0';
-	strncat(parent, path, parent_size);
-
     if (stat(path, &path_stat) == -1) {
-        report_error(parent, last_dir + 1, errno);
-		fs_xfree(parent);
-        return -1;
+        return 0;
     }
 
-	fs_xfree(parent);
     return S_ISDIR(path_stat.st_mode);
 }
 
@@ -72,7 +64,6 @@ static char is_link(const char* child) {
 	char* path = fs_xasprintf("%s/%s", state.path, child);
 
     if (lstat(path, &path_stat) < 0) {
-        report_error(state.path, child, errno);
 		fs_xfree(path);
         return -1;
     }
@@ -118,25 +109,23 @@ static char walkpath(const char* path) {
 		child[0] = '\0';
 		strncat(child, path, name_len);
 
+		while(*next_path == '/') next_path++;
+		char is_last_path = next_path >= path_end;
+
 		if (name_len == 0 || strncmp(path, ".", name_len) == 0) {
-			path = next_path + 1;
+			path = next_path;
 			fs_xfree(child);
 			continue;
 		} else if (strncmp(path, "..", name_len) == 0) {
 			go_back();
-			path = next_path + 1;
+			path = next_path;
 			fs_xfree(child);
 			continue;
 		}
 
 		char is_link_result = is_link(child);
 
-		if (is_link_result < 0) {
-			fs_xfree(child);
-			return -1;
-		}
-
-		if (is_link_result) {
+		if (is_link_result > 0) {
 			char* link = read_link(child);
 			if (link == NULL) {
 				fs_xfree(child);
@@ -150,12 +139,18 @@ static char walkpath(const char* path) {
 			}
 			fs_xfree(link);
 		} else {
+			if (is_link_result < 0 && !is_last_path) {
+				report_error(state.path, child, errno);
+				fs_xfree(child);
+				return -1;
+			}
+
 			append_dir();
 			append_child(child);
 		}
 
 		fs_xfree(child);
-		path = next_path + 1;
+		path = next_path;
 	}
 
 	return 0;
@@ -171,13 +166,7 @@ void abspath(const char *path)
 		return;
 	}
 
-	char is_directory_result = is_directory(state.path);
-	if (is_directory_result < 0) {
-		fs_xfree(state.path);
-		return;
-	}
-
-	if (is_directory_result) {
+	if (is_directory(state.path)) {
 		append_dir();
 	}
 
